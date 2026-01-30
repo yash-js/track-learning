@@ -1,6 +1,6 @@
-# DSA Playlist LMS
+# Learn - YouTube Playlist Learning Tracker
 
-A high-end, modern Learning Management System for Kunal Kushwaha's DSA Playlist built with Next.js 16, React 19, and the latest 2026 tech stack.
+A modern, feature-rich Learning Management System for tracking progress on any YouTube playlist. Built with Next.js 16, React 19, and the latest 2026 tech stack.
 
 ## 🚀 Tech Stack
 
@@ -14,13 +14,17 @@ A high-end, modern Learning Management System for Kunal Kushwaha's DSA Playlist 
 
 ## ✨ Features
 
-- **Dark Mode UI:** Midnight theme with Cyan/Emerald accents
-- **Smart Progress Tracking:** Track video completion and module progress
-- **Streak System:** Build daily learning streaks with automatic calculation
-- **Video Player:** Integrated YouTube player with notes interface
-- **Rich Notes:** Auto-saving notes per video with debounced saves
-- **Gamification:** Progress rings for different DSA modules
-- **Performance:** Server Components for data fetching, optimized with caching
+- **🎨 Modern Dark UI:** Beautiful midnight theme with glassmorphism effects
+- **📊 Smart Progress Tracking:** Track video completion with visual progress indicators
+- **🔥 Streak System:** Build daily learning streaks with automatic calculation
+- **📝 Rich Notes:** Auto-saving notes per video with debounced saves
+- **💡 Key Takeaways:** Save important concepts, formulas, and insights from each video
+- **🏆 Dynamic Achievements:** Unlock achievements as you progress (First Streak, Halfway There, Master)
+- **▶️ Video Player:** Integrated YouTube player with watch position tracking
+- **🔄 Smart Navigation:** Next/Previous video navigation with auto-redirect on completion
+- **⚙️ Playlist Management:** Easy playlist switching with validation
+- **📱 Fully Responsive:** Optimized for mobile, tablet, and desktop
+- **⚡ Performance:** Server Components for data fetching, optimized with caching
 
 ## 🛠️ Setup
 
@@ -53,41 +57,76 @@ A high-end, modern Learning Management System for Kunal Kushwaha's DSA Playlist 
 
 ```
 ├── app/
-│   ├── api/              # API routes
-│   ├── dashboard/        # Dashboard pages
-│   └── layout.tsx        # Root layout with ClerkProvider
+│   ├── api/
+│   │   ├── setup/playlist/    # Playlist setup endpoint
+│   │   └── video/
+│   │       ├── complete/       # Mark video as complete
+│   │       ├── notes/          # Save/update notes
+│   │       ├── position/       # Save watch position
+│   │       └── takeaways/      # Key takeaways CRUD
+│   ├── dashboard/
+│   │   ├── achievements/      # Achievements page
+│   │   ├── playlist/         # Playlist view
+│   │   ├── progress/         # Progress tracking
+│   │   ├── settings/         # User settings
+│   │   └── video/[id]/       # Individual video page
+│   ├── setup/                # Initial playlist setup
+│   └── layout.tsx            # Root layout with ClerkProvider
 ├── components/
-│   ├── dashboard/        # Dashboard components
-│   ├── video/            # Video player components
-│   └── ui/               # Shadcn UI components
+│   ├── dashboard/            # Dashboard components
+│   ├── video/                # Video player & notes components
+│   └── ui/                   # Shadcn UI components
 ├── lib/
-│   ├── prisma.ts         # Prisma client
-│   └── utils.ts          # Utility functions
+│   ├── prisma.ts             # Prisma client singleton
+│   ├── utils.ts              # Utility functions
+│   └── youtube.ts            # YouTube API integration
 └── prisma/
-    └── schema.prisma     # Database schema
+    ├── schema.prisma         # Database schema
+    └── migrations/           # Database migrations
 ```
 
 ## 🎯 Key Features Implementation
 
 ### Streak Calculation
-Uses Next.js 16 `after()` API to handle streak calculations in the background without blocking the UI response.
+Uses Next.js 16 `after()` API to handle streak calculations in the background without blocking the UI response. Streaks are calculated based on consecutive days of video completion.
 
 ### Server Components
-Data fetching is done in Server Components for optimal performance, with `use cache` directives for instant dashboard loads.
+Data fetching is done in Server Components for optimal performance, with caching for instant dashboard loads.
 
 ### Video Progress
 Each video tracks:
 - Completion status
 - Last watched timestamp
-- User notes
-- Progress per module
+- Watch position (resume from where you left off)
+- User notes (auto-saved with debouncing)
+- Key takeaways (important concepts and insights)
+
+### Achievements System
+Dynamic achievements that unlock based on:
+- **First Streak:** Complete a 3-day learning streak
+- **Halfway There:** Complete 50% of your playlist
+- **Master:** Complete 100% of your playlist
+
+### Key Takeaways
+Save and organize important learning points:
+- Add takeaways with optional titles
+- Edit and delete takeaways
+- Organized per video for easy review
 
 ## 🔐 Authentication
 
 The app uses Clerk for authentication. Make sure to:
-1. Create a Clerk account
+1. Create a Clerk account at [clerk.com](https://clerk.com)
 2. Set up your application
-3. Add the keys to your `.env` file
+3. Add the keys to your `.env` file:
+   ```
+   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_...
+   CLERK_SECRET_KEY=sk_test_...
+   NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+   NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+   NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/dashboard
+   NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/setup
+   ```
 
 ## 🎥 YouTube Integration
 
@@ -97,20 +136,74 @@ The app fetches playlist data from YouTube Data API v3:
 3. Create an API key credential
 4. Add `YOUTUBE_API_KEY` to your `.env` file
 
-The playlist ID is hardcoded: `PL9gnSGHSqcnr_DxHsP7AW9ftq0AtAyYqJ` (Kunal Kushwaha's DSA Playlist)
+**Playlist Setup:**
+- Users can add any YouTube playlist URL during setup
+- Playlist URL is validated to ensure it's a valid YouTube playlist
+- Videos are automatically fetched and organized
+- Playlist can be changed anytime from settings
 
 ## 📊 Database Schema
 
-- **User:** Tracks user streaks, progress, and activity
-- **VideoProgress:** Tracks individual video completion, notes, and watch history
+- **User:** Tracks user streaks, progress, playlist info, and activity
+- **VideoProgress:** Tracks individual video completion, notes, watch position, and watch history
+- **KeyTakeaway:** Stores key takeaways/concepts saved by users for each video
 
-## 🚧 Next Steps
+## ✅ Completed Features
 
 - [x] Integrate YouTube API to fetch actual playlist data
-- [ ] Add video timeline/bookmarking feature
-- [ ] Implement module categorization
-- [ ] Add achievement system
-- [ ] Add social features (leaderboard, sharing)
+- [x] Key Takeaways feature (save important concepts)
+- [x] Dynamic Achievement system
+- [x] Playlist management with validation
+- [x] Next/Previous video navigation
+- [x] Auto-redirect on video completion
+- [x] Watch position tracking (resume playback)
+- [x] Fully responsive design
+- [x] Settings page with playlist management
+
+## 🚧 Future Enhancements
+
+- [ ] Module categorization
+- [ ] Social features (leaderboard, sharing)
+- [ ] Video search and filtering
+- [ ] Export notes and takeaways
+- [ ] Custom themes
+- [ ] Video speed controls
+- [ ] Subtitles/transcript support
+
+## 🛠️ Development
+
+### Running Migrations
+
+```bash
+# Create a new migration
+npx prisma migrate dev --name your_migration_name
+
+# Apply migrations
+npx prisma migrate deploy
+
+# Generate Prisma Client
+npx prisma generate
+```
+
+### Environment Variables
+
+Required environment variables:
+
+```env
+# Clerk Authentication
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
+CLERK_SECRET_KEY=
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/dashboard
+NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/setup
+
+# Database
+DATABASE_URL=
+
+# YouTube API
+YOUTUBE_API_KEY=
+```
 
 ## 📝 License
 
