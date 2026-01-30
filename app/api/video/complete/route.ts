@@ -1,0 +1,130 @@
+import { auth } from "@clerk/nextjs/server"
+import { NextResponse } from "next/server"
+import { prisma } from "@/lib/prisma"
+import { after } from "next/server"
+
+export async function POST(request: Request) {
+  try {
+    const { userId } = await auth()
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const { videoId, userId: paramUserId, videoProgressId } = await request.json()
+
+    const user = await prisma.user.findUnique({
+      where: { clerkId: userId },
+    })
+
+    if (!user || user.id !== paramUserId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    // Check if video was already completed
+    const existingProgress = await prisma.videoProgress.findUnique({
+      where: videoProgressId
+        ? { id: videoProgressId }
+        : {
+            videoId_userId: {
+              videoId,
+              userId: user.id,
+            },
+          },
+    })
+
+    const wasAlreadyCompleted = existingProgress?.completed ?? false
+
+    // Update or create video progress
+    const videoProgress = await prisma.videoProgress.upsert({
+      where: videoProgressId
+        ? { id: videoProgressId }
+        : {
+            videoId_userId: {
+              videoId,
+              userId: user.id,
+            },
+          },
+      update: {
+        completed: true,
+        lastWatched: new Date(),
+      },
+      create: {
+        videoId,
+        userId: user.id,
+        completed: true,
+        lastWatched: new Date(),
+      },
+    })
+
+    // Use Next.js 16 after() API to handle streak calculation in background
+    after(async () => {
+      try {
+        // Only update progress and streak if this is the first time completing the video
+        if (!wasAlreadyCompleted) {
+          // Update total videos completed
+          await prisma.user.update({
+            where: { id: user.id },
+            data: {
+              totalVideosCompleted: {
+                increment: 1,
+              },
+            },
+          })
+
+          // Calculate streak - only update if this is a new completion
+          const now = new Date()
+          const lastActive = user.lastActiveAt ? new Date(user.lastActiveAt) : null
+          
+          // Normalize dates to midnight for accurate day comparison
+          const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+          const lastActiveDate = lastActive
+            ? new Date(lastActive.getFullYear(), lastActive.getMonth(), lastActive.getDate())
+            : null
+          
+          const daysSinceLastActive = lastActiveDate
+            ? Math.floor((today.getTime() - lastActiveDate.getTime()) / (1000 * 60 * 60 * 24))
+            : null
+
+          let newStreak = user.currentStreak
+
+          if (daysSinceLastActive === null) {
+            // First time ever completing a video - start streak at 1
+            newStreak = 1
+          } else if (daysSinceLastActive === 0) {
+            // Same day - don't change streak (already got credit for today)
+            newStreak = user.currentStreak
+          } else if (daysSinceLastActive === 1) {
+            // Consecutive day - increment streak
+            newStreak = user.currentStreak + 1
+          } else {
+            // Streak broken (more than 1 day gap) - reset to 1
+            newStreak = 1
+          }
+
+          const bestStreak = Math.max(user.bestStreak, newStreak)
+
+          await prisma.user.update({
+            where: { id: user.id },
+            data: {
+              currentStreak: newStreak,
+              bestStreak,
+              lastActiveAt: now,
+            },
+          })
+        }
+        // If video was already completed, don't update streak or progress
+      } catch (error) {
+        console.error("Error updating streak:", error)
+      }
+    })
+
+    return NextResponse.json({ success: true, videoProgress })
+  } catch (error) {
+    console.error("Error completing video:", error)
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    )
+  }
+}
+
