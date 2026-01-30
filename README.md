@@ -205,6 +205,23 @@ DATABASE_URL=
 YOUTUBE_API_KEY=
 ```
 
+### ⚠️ Important: Supabase Connection Pooling for Vercel
+
+When deploying to Vercel with Supabase, you **must** use the **Connection Pooler** URL instead of the direct connection URL.
+
+**For Supabase:**
+1. Go to your Supabase project dashboard
+2. Navigate to **Settings** → **Database**
+3. Under **Connection string**, select **Connection pooling** (not Direct connection)
+4. Copy the connection string (it will have port `6543` instead of `5432`)
+5. Use this URL in your Vercel environment variables
+
+**Example:**
+- ❌ Direct connection: `postgresql://user:pass@db.xxx.supabase.co:5432/postgres`
+- ✅ Connection pooler: `postgresql://user:pass@db.xxx.supabase.co:6543/postgres?pgbouncer=true`
+
+The connection pooler is required for serverless environments like Vercel to prevent connection limit issues.
+
 ## 📝 License
 
 MIT

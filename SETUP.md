@@ -43,6 +43,9 @@ DATABASE_URL="postgresql://user:password@localhost:5432/dsa_lms?schema=public"
 - **Local:** Install PostgreSQL and create a database
 - **Cloud (Recommended):**
   - [Supabase](https://supabase.com): Free tier available
+    - **⚠️ IMPORTANT for Vercel:** Use the **Connection Pooler** URL (port 6543), not the direct connection (port 5432)
+    - Go to Supabase Dashboard → Settings → Database → Connection string → Select "Connection pooling"
+    - Format: `postgresql://user:pass@db.xxx.supabase.co:6543/postgres?pgbouncer=true`
   - [Neon](https://neon.tech): Serverless PostgreSQL
 
 ### 3. Set Up Database Schema
