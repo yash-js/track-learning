@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { CheckCircle2 } from "lucide-react"
+import { CheckCircle2, Loader2, Undo2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 interface VideoPlayerProps {
@@ -15,6 +15,7 @@ interface VideoPlayerProps {
   watchPosition?: number | null
   nextVideoId?: string | null
   description?: string | null
+  initialCompleted?: boolean
 }
 
 interface YouTubePlayer {
@@ -54,12 +55,20 @@ export default function VideoPlayer({
   watchPosition,
   nextVideoId,
   description,
+  initialCompleted = false,
 }: VideoPlayerProps) {
-  const [isCompleted, setIsCompleted] = useState(false)
+  const [isCompleted, setIsCompleted] = useState(initialCompleted)
+  const [isLoading, setIsLoading] = useState(false)
+  const [isRedirecting, setIsRedirecting] = useState(false)
   const [player, setPlayer] = useState<YouTubePlayer | null>(null)
   const playerRef = useRef<HTMLDivElement>(null)
   const saveIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const router = useRouter()
+
+  // Sync completion state with prop changes (e.g., after refresh)
+  useEffect(() => {
+    setIsCompleted(initialCompleted)
+  }, [initialCompleted])
 
   // Load YouTube IFrame API
   useEffect(() => {
@@ -212,7 +221,9 @@ export default function VideoPlayer({
     }
   }
 
-  const handleComplete = async () => {
+  const handleToggleComplete = async () => {
+    const newCompletedState = !isCompleted
+    setIsLoading(true)
     try {
       const response = await fetch("/api/video/complete", {
         method: "POST",
@@ -221,22 +232,28 @@ export default function VideoPlayer({
           videoId: videoIdParam,
           userId,
           videoProgressId,
+          completed: newCompletedState,
         }),
       })
 
       if (response.ok) {
-        setIsCompleted(true)
+        setIsCompleted(newCompletedState)
+        setIsLoading(false)
         router.refresh()
         
-        // Auto-redirect to next video if available
-        if (nextVideoId) {
+        // Auto-redirect to next video only when marking as complete (not when marking incomplete)
+        if (newCompletedState && nextVideoId) {
+          setIsRedirecting(true)
           setTimeout(() => {
             router.push(`/dashboard/video/${nextVideoId}`)
           }, 1000) // Small delay to show completion state
         }
+      } else {
+        setIsLoading(false)
       }
     } catch (error) {
-      console.error("Error marking video as complete:", error)
+      console.error("Error updating video completion:", error)
+      setIsLoading(false)
     }
   }
 
@@ -252,20 +269,35 @@ export default function VideoPlayer({
               {title}
             </h2>
             <Button
-              onClick={handleComplete}
-              disabled={isCompleted}
+              onClick={handleToggleComplete}
+              disabled={isLoading || isRedirecting}
               variant={isCompleted ? "secondary" : "default"}
               className="gap-2 w-full sm:w-auto flex-shrink-0"
               size="sm"
             >
-              {isCompleted ? (
+              {isRedirecting ? (
                 <>
-                  <CheckCircle2 className="h-4 w-4" />
-                  <span className="hidden sm:inline">Completed</span>
-                  <span className="sm:hidden">Done</span>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="hidden sm:inline">Redirecting...</span>
+                  <span className="sm:hidden">Redirecting...</span>
+                </>
+              ) : isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="hidden sm:inline">
+                    {isCompleted ? "Marking incomplete..." : "Marking complete..."}
+                  </span>
+                  <span className="sm:hidden">Saving...</span>
+                </>
+              ) : isCompleted ? (
+                <>
+                  <Undo2 className="h-4 w-4" />
+                  <span className="hidden sm:inline">Mark as Incomplete</span>
+                  <span className="sm:hidden">Incomplete</span>
                 </>
               ) : (
                 <>
+                  <CheckCircle2 className="h-4 w-4" />
                   <span className="hidden sm:inline">Mark as Complete</span>
                   <span className="sm:hidden">Complete</span>
                 </>

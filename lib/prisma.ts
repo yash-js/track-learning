@@ -33,28 +33,33 @@ function getPrismaClient() {
     )
   }
 
+  // Build connection string with proper SSL and pooler settings
+  let finalConnectionString = connectionString
+  
+  // For connection pooler, ensure pgbouncer mode is enabled
+  if (isPoolerConnection && !connectionString.includes('pgbouncer=true')) {
+    finalConnectionString = connectionString.includes('?')
+      ? `${connectionString}&pgbouncer=true`
+      : `${connectionString}?pgbouncer=true`
+  }
+  
+  // Explicitly set SSL mode to avoid warnings (for Supabase/Neon)
+  // This prevents the pg library warning about SSL mode semantics
+  if ((isSupabase || connectionString.includes('neon.tech')) && !finalConnectionString.includes('sslmode=')) {
+    finalConnectionString = finalConnectionString.includes('?')
+      ? `${finalConnectionString}&sslmode=require`
+      : `${finalConnectionString}?sslmode=require`
+  }
+
   // For Prisma 7, use the adapter with a connection pool
   // Configure pool for serverless environments (Vercel, Supabase)
   const poolConfig: ConstructorParameters<typeof Pool>[0] = {
-    connectionString,
+    connectionString: finalConnectionString,
     max: 1, // Serverless environments should use 1 connection per instance
     min: 0, // Allow pool to close all connections when idle
     idleTimeoutMillis: 20000, // Close idle connections after 20 seconds
     connectionTimeoutMillis: 30000, // Increased timeout for initial connection
-    // Add SSL for Supabase/Neon connections
-    ssl: isSupabase || connectionString.includes('neon.tech')
-      ? { rejectUnauthorized: false }
-      : undefined,
-  }
-
-  // For connection pooler, add additional parameters
-  if (isPoolerConnection) {
-    // Ensure pgbouncer mode is enabled
-    if (!connectionString.includes('pgbouncer=true')) {
-      poolConfig.connectionString = connectionString.includes('?')
-        ? `${connectionString}&pgbouncer=true`
-        : `${connectionString}?pgbouncer=true`
-    }
+    // SSL is handled via connection string sslmode parameter, not here
   }
 
   const pool = new Pool(poolConfig)

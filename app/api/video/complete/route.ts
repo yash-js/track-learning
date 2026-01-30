@@ -10,7 +10,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { videoId, userId: paramUserId, videoProgressId } = await request.json()
+    const { videoId, userId: paramUserId, videoProgressId, completed = true } = await request.json()
 
     const user = await prisma.user.findUnique({
       where: { clerkId: userId },
@@ -33,6 +33,8 @@ export async function POST(request: Request) {
     })
 
     const wasAlreadyCompleted = existingProgress?.completed ?? false
+    const isCompleting = completed === true
+    const isUncompleting = completed === false
 
     // Update or create video progress
     const videoProgress = await prisma.videoProgress.upsert({
@@ -45,13 +47,13 @@ export async function POST(request: Request) {
             },
           },
       update: {
-        completed: true,
+        completed: completed,
         lastWatched: new Date(),
       },
       create: {
         videoId,
         userId: user.id,
-        completed: true,
+        completed: completed,
         lastWatched: new Date(),
       },
     })
@@ -60,7 +62,7 @@ export async function POST(request: Request) {
     after(async () => {
       try {
         // Only update progress and streak if this is the first time completing the video
-        if (!wasAlreadyCompleted) {
+        if (isCompleting && !wasAlreadyCompleted) {
           // Update total videos completed
           await prisma.user.update({
             where: { id: user.id },
@@ -109,6 +111,18 @@ export async function POST(request: Request) {
               currentStreak: newStreak,
               bestStreak,
               lastActiveAt: now,
+            },
+          })
+        }
+        
+        // If uncompleting, decrement total videos completed
+        if (isUncompleting && wasAlreadyCompleted) {
+          await prisma.user.update({
+            where: { id: user.id },
+            data: {
+              totalVideosCompleted: {
+                decrement: 1,
+              },
             },
           })
         }

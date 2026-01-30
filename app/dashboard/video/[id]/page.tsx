@@ -90,6 +90,7 @@ export default async function VideoPage({
           watchPosition={videoProgress?.watchPosition ?? null}
           nextVideoId={nextVideoId}
           description={video.description || "Watch and learn from this tutorial"}
+          initialCompleted={videoProgress?.completed ?? false}
         />
 
         <VideoNotes
