@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic"
 import { Flame, Menu } from "lucide-react"
-import { User } from "@prisma/client"
+import { User } from "@/app/generated/prisma/client"
 import { Button } from "@/components/ui/button"
 
 const UserButton = dynamic(

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { User } from "@prisma/client"
+import { User } from "@/app/generated/prisma/client"
 import Sidebar from "@/components/dashboard/sidebar"
 import Header from "@/components/dashboard/header"
 
