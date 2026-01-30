@@ -3,53 +3,30 @@ import { prisma } from "@/lib/prisma"
 import { getPlaylistVideos } from "@/lib/youtube"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Trophy, Flame, Target, CheckCircle2 } from "lucide-react"
+import { Trophy, Flame, Target, CheckCircle2, LucideIcon } from "lucide-react"
 
-export default async function AchievementsPage() {
-  const { userId } = await auth()
-  
-  if (!userId) return null
+interface AchievementCardProps {
+  icon: LucideIcon
+  title: string
+  description: string
+  unlocked: boolean
+  progress?: number
+  progressLabel?: string
+  iconColor?: string
+  borderColor?: string
+}
 
-  const user = await prisma.user.findUnique({
-    where: { clerkId: userId },
-  })
-
-  if (!user) return null
-
-  // Get playlist videos to calculate total
-  const playlistId = (user as any).playlistId
-  const playlistVideos = playlistId ? await getPlaylistVideos(playlistId) : []
-  const totalVideos = playlistVideos.length || 0
-
-  // Calculate achievements
-  const firstStreakUnlocked = user.bestStreak >= 3 || user.currentStreak >= 3
-  const halfwayUnlocked = totalVideos > 0 && (user.totalVideosCompleted / totalVideos) >= 0.5
-  const masterUnlocked = totalVideos > 0 && user.totalVideosCompleted === totalVideos
-
-  // Calculate progress for halfway achievement
-  const halfwayProgress = totalVideos > 0 
-    ? Math.round((user.totalVideosCompleted / totalVideos) * 100)
-    : 0
-
-  const AchievementCard = ({
-    icon: Icon,
-    title,
-    description,
-    unlocked,
-    progress,
-    progressLabel,
-    iconColor,
-    borderColor,
-  }: {
-    icon: typeof Flame
-    title: string
-    description: string
-    unlocked: boolean
-    progress?: number
-    progressLabel?: string
-    iconColor?: string
-    borderColor?: string
-  }) => (
+function AchievementCard({
+  icon: Icon,
+  title,
+  description,
+  unlocked,
+  progress,
+  progressLabel,
+  iconColor,
+  borderColor,
+}: AchievementCardProps) {
+  return (
     <Card className={`backdrop-blur-md transition-all relative overflow-hidden ${
       unlocked 
         ? "bg-muted/30 border-border/50" 
@@ -97,6 +74,33 @@ export default async function AchievementsPage() {
       </CardContent>
     </Card>
   )
+}
+
+export default async function AchievementsPage() {
+  const { userId } = await auth()
+  
+  if (!userId) return null
+
+  const user = await prisma.user.findUnique({
+    where: { clerkId: userId },
+  })
+
+  if (!user) return null
+
+  // Get playlist videos to calculate total
+  const playlistId = (user as { playlistId?: string | null }).playlistId
+  const playlistVideos = playlistId ? await getPlaylistVideos(playlistId) : []
+  const totalVideos = playlistVideos.length || 0
+
+  // Calculate achievements
+  const firstStreakUnlocked = user.bestStreak >= 3 || user.currentStreak >= 3
+  const halfwayUnlocked = totalVideos > 0 && (user.totalVideosCompleted / totalVideos) >= 0.5
+  const masterUnlocked = totalVideos > 0 && user.totalVideosCompleted === totalVideos
+
+  // Calculate progress for halfway achievement
+  const halfwayProgress = totalVideos > 0 
+    ? Math.round((user.totalVideosCompleted / totalVideos) * 100)
+    : 0
 
   return (
     <div className="space-y-6">

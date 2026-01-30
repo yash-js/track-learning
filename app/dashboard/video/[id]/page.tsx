@@ -4,7 +4,7 @@ import { getVideoById, getPlaylistVideos } from "@/lib/youtube"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
 import VideoPlayer from "@/components/video/video-player"
 import VideoNotes from "@/components/video/video-notes"
 
@@ -38,11 +38,11 @@ export default async function VideoPage({
       keyTakeaways: {
         orderBy: { createdAt: "desc" },
       },
-    } as any,
+    },
   })
 
   // Get playlist videos to find next/previous
-  const playlistId = (user as any).playlistId
+  const playlistId = (user as { playlistId?: string | null }).playlistId
   let nextVideoId: string | null = null
   let previousVideoId: string | null = null
 
@@ -99,7 +99,7 @@ export default async function VideoPage({
           userId={user.id}
           videoId={id}
           initialNotes={videoProgress?.notes || ""}
-          initialTakeaways={(videoProgress?.keyTakeaways || []).map((t: any) => ({
+          initialTakeaways={(videoProgress?.keyTakeaways || []).map((t) => ({
             id: t.id,
             content: t.content,
             createdAt: t.createdAt.toISOString(),

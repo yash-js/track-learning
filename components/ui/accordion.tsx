@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils"
 
 interface AccordionContextValue {
   value: string[]
-  onValueChange: (value: string[]) => void
+  onValueChange: (itemValue: string) => void
 }
 
 const AccordionContext = React.createContext<AccordionContextValue>({
@@ -54,7 +54,7 @@ const AccordionItem = React.forwardRef<
   React.HTMLAttributes<HTMLDivElement> & {
     value: string
   }
->(({ className, value, children, ...props }, ref) => {
+>(({ className, children, ...props }, ref) => {
   return (
     <div ref={ref} className={cn("border-b border-border/50", className)} {...props}>
       {children}

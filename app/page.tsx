@@ -25,7 +25,7 @@ export default async function HomePage() {
       where: { clerkId: userId },
     })
     
-    if (user && (user as any).playlistId) {
+    if (user && (user as { playlistId?: string | null }).playlistId) {
       redirect("/dashboard")
     } else {
       redirect("/setup")

@@ -1,4 +1,3 @@
-import { prisma } from "@/lib/prisma"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 interface ProgressRingsProps {
@@ -15,7 +14,7 @@ const modules = [
   { name: "Graphs", chartColor: "chart-1" },
 ]
 
-export default async function ProgressRings({ userId }: ProgressRingsProps) {
+export default async function ProgressRings({}: ProgressRingsProps) {
   // In a real implementation, you'd calculate progress per module
   // For now, all modules start at 0% progress
   const moduleProgress = modules.map((module) => ({

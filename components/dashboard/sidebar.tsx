@@ -27,10 +27,13 @@ interface SidebarProps {
   onClose?: () => void
 }
 
-export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
-  const pathname = usePathname()
+interface SidebarContentProps {
+  pathname: string
+  onClose?: () => void
+}
 
-  const SidebarContent = () => (
+function SidebarContent({ pathname, onClose }: SidebarContentProps) {
+  return (
     <div className="flex h-full flex-col">
       <div className="flex h-16 items-center justify-between gap-2 border-b border-border px-4 sm:px-6">
         <div className="flex items-center gap-2">
@@ -77,12 +80,16 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
       </div>
     </div>
   )
+}
+
+export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
+  const pathname = usePathname()
 
   return (
     <>
       {/* Desktop Sidebar */}
       <aside className="hidden lg:block sticky top-0 h-screen w-64 border-r border-border bg-muted/30 backdrop-blur-md">
-        <SidebarContent />
+        <SidebarContent pathname={pathname} onClose={onClose} />
       </aside>
 
       {/* Mobile Sidebar Overlay */}
@@ -100,7 +107,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <SidebarContent />
+        <SidebarContent pathname={pathname} onClose={onClose} />
       </aside>
     </>
   )

@@ -1,6 +1,6 @@
 import { SignUp } from "@clerk/nextjs"
 import Link from "next/link"
-import { CheckCircle2, Layout, PenLine, Zap } from "lucide-react" // Added for visual flair
+import { CheckCircle2, PenLine, Zap } from "lucide-react" // Added for visual flair
 import LearningTrackerIcon from "@/components/icons/learning-tracker-icon"
 import { Button } from "@/components/ui/button"
 

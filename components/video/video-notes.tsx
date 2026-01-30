@@ -57,6 +57,7 @@ export default function VideoNotes({
     }, 1000) // Debounce for 1 second
 
     return () => clearTimeout(timeoutId)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [notes])
 
   const saveNotes = async () => {
@@ -262,8 +263,8 @@ export default function VideoNotes({
                 <div className="text-center py-6 sm:py-8 text-xs sm:text-sm text-muted-foreground">
                   <Lightbulb className="h-6 w-6 sm:h-8 sm:w-8 mx-auto mb-2 opacity-50" />
                   <p>No key takeaways yet</p>
-                  <p className="text-xs mt-1 hidden sm:block">Click "Add Takeaway" to save important concepts</p>
-                  <p className="text-xs mt-1 sm:hidden">Tap "Add" to save concepts</p>
+                  <p className="text-xs mt-1 hidden sm:block">Click &quot;Add Takeaway&quot; to save important concepts</p>
+                  <p className="text-xs mt-1 sm:hidden">Tap &quot;Add&quot; to save concepts</p>
                 </div>
               ) : (
                 <div className="space-y-2 max-h-[300px] sm:max-h-[400px] overflow-y-auto">

@@ -3,9 +3,8 @@
 import { useState, useEffect, useRef } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react"
+import { CheckCircle2 } from "lucide-react"
 import { useRouter } from "next/navigation"
-import Link from "next/link"
 
 interface VideoPlayerProps {
   videoId: string
@@ -18,10 +17,31 @@ interface VideoPlayerProps {
   description?: string | null
 }
 
+interface YouTubePlayer {
+  seekTo: (seconds: number, allowSeekAhead: boolean) => void
+  playVideo: () => void
+  getCurrentTime: () => number
+}
+
+interface YouTubeAPI {
+  Player: new (elementId: string | HTMLElement, config: {
+    videoId: string
+    playerVars: Record<string, unknown>
+    events: {
+      onReady?: (event: { target: YouTubePlayer }) => void
+      onStateChange?: (event: { data: number; target: YouTubePlayer }) => void
+    }
+  }) => YouTubePlayer
+  PlayerState: {
+    PAUSED: number
+    ENDED: number
+  }
+}
+
 declare global {
   interface Window {
-    YT: any
-    onYouTubeIframeAPIReady: () => void
+    YT?: YouTubeAPI
+    onYouTubeIframeAPIReady?: () => void
   }
 }
 
@@ -36,7 +56,7 @@ export default function VideoPlayer({
   description,
 }: VideoPlayerProps) {
   const [isCompleted, setIsCompleted] = useState(false)
-  const [player, setPlayer] = useState<any>(null)
+  const [player, setPlayer] = useState<YouTubePlayer | null>(null)
   const playerRef = useRef<HTMLDivElement>(null)
   const saveIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const router = useRouter()
@@ -82,7 +102,7 @@ export default function VideoPlayer({
   const initializePlayer = () => {
     if (!playerRef.current || !window.YT) return
 
-    const ytPlayer = new window.YT.Player(playerRef.current, {
+    new window.YT.Player(playerRef.current, {
       videoId: videoId,
       playerVars: {
         autoplay: 0,
@@ -90,14 +110,14 @@ export default function VideoPlayer({
         start: watchPosition ? Math.floor(watchPosition) : 0,
       },
       events: {
-        onReady: (event: any) => {
+        onReady: (event: { target: YouTubePlayer }) => {
           setPlayer(event.target)
           // Start tracking position
           startPositionTracking(event.target)
         },
-        onStateChange: (event: any) => {
+        onStateChange: (event: { data: number; target: YouTubePlayer }) => {
           // Save position when video is paused or ended
-          if (event.data === window.YT.PlayerState.PAUSED || event.data === window.YT.PlayerState.ENDED) {
+          if (window.YT && (event.data === window.YT.PlayerState.PAUSED || event.data === window.YT.PlayerState.ENDED)) {
             savePosition(event.target.getCurrentTime())
           }
         },
@@ -107,9 +127,10 @@ export default function VideoPlayer({
   
   // Listen for seek events from timeline
   useEffect(() => {
-    const handleSeek = (e: CustomEvent<number>) => {
+    const handleSeek = (e: Event) => {
+      const customEvent = e as CustomEvent<number>
       if (player && typeof player.seekTo === "function") {
-        player.seekTo(e.detail, true)
+        player.seekTo(customEvent.detail, true)
         player.playVideo()
       }
     }
@@ -117,21 +138,21 @@ export default function VideoPlayer({
     const handleRequestTime = () => {
       if (player && typeof player.getCurrentTime === "function") {
         const currentTime = player.getCurrentTime()
-        const event = new CustomEvent("videoGetTime", { detail: currentTime })
+        const event = new CustomEvent<number>("videoGetTime", { detail: currentTime })
         window.dispatchEvent(event)
       }
     }
     
-    window.addEventListener("videoSeek" as any, handleSeek as EventListener)
-    window.addEventListener("videoRequestTime" as any, handleRequestTime as EventListener)
+    window.addEventListener("videoSeek", handleSeek)
+    window.addEventListener("videoRequestTime", handleRequestTime)
     
     return () => {
-      window.removeEventListener("videoSeek" as any, handleSeek as EventListener)
-      window.removeEventListener("videoRequestTime" as any, handleRequestTime as EventListener)
+      window.removeEventListener("videoSeek", handleSeek)
+      window.removeEventListener("videoRequestTime", handleRequestTime)
     }
   }, [player])
 
-  const startPositionTracking = (ytPlayer: any) => {
+  const startPositionTracking = (ytPlayer: YouTubePlayer) => {
     // Save position every 10 seconds while playing
     if (saveIntervalRef.current) {
       clearInterval(saveIntervalRef.current)

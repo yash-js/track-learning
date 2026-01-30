@@ -82,9 +82,11 @@ export default async function ProgressPage() {
                       <span className="text-sm font-medium text-foreground group-hover:text-primary transition-colors line-clamp-1 flex-1 mr-2">
                         {completion.title}
                       </span>
-                      <span className="text-xs text-foreground/70 whitespace-nowrap">
-                        {new Date(completion.lastWatched).toLocaleDateString()}
-                      </span>
+                      {completion.lastWatched && (
+                        <span className="text-xs text-foreground/70 whitespace-nowrap">
+                          {new Date(completion.lastWatched).toLocaleDateString()}
+                        </span>
+                      )}
                     </div>
                   </Link>
                 ))}

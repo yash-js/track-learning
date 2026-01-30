@@ -1,10 +1,10 @@
 "use client"
 
-import { SignIn, SignUp } from "@clerk/nextjs"
+import { SignIn } from "@clerk/nextjs"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { Suspense } from "react"
-import { CheckCircle2, Layout, PenLine, PlayCircle, Zap } from "lucide-react" // Added for visual flair
+import { CheckCircle2, PenLine, Zap } from "lucide-react" // Added for visual flair
 import LearningTrackerIcon from "@/components/icons/learning-tracker-icon"
 import { Button } from "@/components/ui/button"
 

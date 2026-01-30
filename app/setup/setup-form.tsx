@@ -76,7 +76,7 @@ export default function SetupForm() {
             <Video className="h-6 w-6 text-accent" />
           </div>
           <div>
-            <CardTitle className="text-2xl">Welcome! Let's Get Started</CardTitle>
+            <CardTitle className="text-2xl">Welcome! Let&apos;s Get Started</CardTitle>
             <CardDescription className="text-base mt-1">
               Add your YouTube playlist to start tracking your learning progress
             </CardDescription>

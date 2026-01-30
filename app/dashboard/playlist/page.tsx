@@ -24,7 +24,7 @@ export default async function PlaylistPage() {
   if (!user) return null
 
   // If user.playlistId doesn't exist on the type, try fallback handling.
-  const playlistId = (user as any).playlistId
+  const playlistId = (user as { playlistId?: string | null }).playlistId
   if (!playlistId) return null
 
   const playlistVideos = await getPlaylistVideos(playlistId)
@@ -227,7 +227,7 @@ export default async function PlaylistPage() {
                     <CheckCircle2 className="h-16 w-16 mx-auto mb-4 text-secondary opacity-50" />
                     <h3 className="text-lg font-semibold mb-2">All caught up! 🎉</h3>
                     <p className="text-muted-foreground">
-                      You've completed all videos in your playlist
+                      You&apos;ve completed all videos in your playlist
                     </p>
                   </CardContent>
                 </Card>

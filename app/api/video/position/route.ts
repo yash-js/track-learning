@@ -11,7 +11,12 @@ export async function POST(request: Request) {
 
     // Handle both JSON and Blob (from sendBeacon) requests
     const contentType = request.headers.get("content-type") || ""
-    let body: any
+    let body: {
+      videoId?: string
+      userId?: string
+      videoProgressId?: string
+      currentTime?: number
+    }
     
     if (contentType.includes("application/json")) {
       body = await request.json()
@@ -23,6 +28,13 @@ export async function POST(request: Request) {
     }
 
     const { videoId, userId: paramUserId, videoProgressId, currentTime } = body
+
+    if (!videoId || typeof videoId !== "string") {
+      return NextResponse.json(
+        { error: "videoId is required" },
+        { status: 400 }
+      )
+    }
 
     if (typeof currentTime !== "number" || currentTime < 0) {
       return NextResponse.json(

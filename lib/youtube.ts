@@ -131,7 +131,7 @@ export async function getPlaylistVideos(playlistId: string): Promise<YouTubeVide
 
           for (const item of data.items) {
             const videoId = item.contentDetails.videoId
-            const details = detailsMap.get(videoId)
+            const details = detailsMap.get(videoId) as YouTubeVideoDetails | undefined
 
             videos.push({
               id: videoId, // Use videoId as the ID for consistency
@@ -139,7 +139,7 @@ export async function getPlaylistVideos(playlistId: string): Promise<YouTubeVide
               title: item.snippet.title,
               description: item.snippet.description || "",
               thumbnail: item.snippet.thumbnails.high?.url || item.snippet.thumbnails.medium?.url || "",
-              duration: details?.contentDetails.duration
+              duration: details?.contentDetails?.duration
                 ? formatDuration(details.contentDetails.duration)
                 : "0:00",
               position: item.snippet.position,
