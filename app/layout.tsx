@@ -12,6 +12,9 @@ const petrona = Petrona({
 export const metadata: Metadata = {
   title: "Learning Tracker",
   description: "Track your learning progress with any YouTube playlist",
+  icons: {
+    icon: "/icon.svg",
+  },
 };
 
 export default function RootLayout({
