@@ -7,3 +7,4 @@ ADD COLUMN IF NOT EXISTS "watchPosition" DOUBLE PRECISION;
 -- Create an index for faster queries on watchPosition
 CREATE INDEX IF NOT EXISTS "VideoProgress_watchPosition_idx" ON "VideoProgress"("watchPosition");
 
+

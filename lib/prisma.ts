@@ -43,12 +43,18 @@ function getPrismaClient() {
       : `${connectionString}?pgbouncer=true`
   }
   
-  // Explicitly set SSL mode to avoid warnings (for Supabase/Neon)
+  // Explicitly set SSL mode to verify-full to avoid warnings (for Supabase/Neon)
   // This prevents the pg library warning about SSL mode semantics
-  if ((isSupabase || connectionString.includes('neon.tech')) && !finalConnectionString.includes('sslmode=')) {
-    finalConnectionString = finalConnectionString.includes('?')
-      ? `${finalConnectionString}&sslmode=require`
-      : `${finalConnectionString}?sslmode=require`
+  // Using verify-full explicitly instead of require to match current behavior
+  if (isSupabase || connectionString.includes('neon.tech')) {
+    // Replace existing sslmode=require with verify-full, or add it if not present
+    if (finalConnectionString.includes('sslmode=require')) {
+      finalConnectionString = finalConnectionString.replace(/sslmode=require/g, 'sslmode=verify-full')
+    } else if (!finalConnectionString.includes('sslmode=')) {
+      finalConnectionString = finalConnectionString.includes('?')
+        ? `${finalConnectionString}&sslmode=verify-full`
+        : `${finalConnectionString}?sslmode=verify-full`
+    }
   }
 
   // For Prisma 7, use the adapter with a connection pool

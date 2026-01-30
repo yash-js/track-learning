@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { after } from "next/server"
+import { calculateStreak } from "@/lib/utils"
 
 export async function POST(request: Request) {
   try {
@@ -77,32 +78,8 @@ export async function POST(request: Request) {
           const now = new Date()
           const lastActive = user.lastActiveAt ? new Date(user.lastActiveAt) : null
           
-          // Normalize dates to midnight for accurate day comparison
-          const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-          const lastActiveDate = lastActive
-            ? new Date(lastActive.getFullYear(), lastActive.getMonth(), lastActive.getDate())
-            : null
-          
-          const daysSinceLastActive = lastActiveDate
-            ? Math.floor((today.getTime() - lastActiveDate.getTime()) / (1000 * 60 * 60 * 24))
-            : null
-
-          let newStreak = user.currentStreak
-
-          if (daysSinceLastActive === null) {
-            // First time ever completing a video - start streak at 1
-            newStreak = 1
-          } else if (daysSinceLastActive === 0) {
-            // Same day - don't change streak (already got credit for today)
-            newStreak = user.currentStreak
-          } else if (daysSinceLastActive === 1) {
-            // Consecutive day - increment streak
-            newStreak = user.currentStreak + 1
-          } else {
-            // Streak broken (more than 1 day gap) - reset to 1
-            newStreak = 1
-          }
-
+          // Use utility function to calculate new streak
+          const newStreak = calculateStreak(user.currentStreak, lastActive, true)
           const bestStreak = Math.max(user.bestStreak, newStreak)
 
           await prisma.user.update({
